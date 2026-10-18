@@ -1,12 +1,16 @@
-# Role and class base values
-# Structure keys are English; role IDs, display names and attribute IDs may be Chinese.
-# Only primary attributes are listed here. Derived values come from formulas.yml.
+# 角色与职业基础数值模板
+# 配置结构键使用英文，角色 ID、显示名称和属性 ID 可以使用中文。
+# 这里只写基础属性和随等级变化的公式；派生属性统一由 formulas.yml 计算。
 
 roles:
   示例战士:
+    # display_name：在 UI 或日志中显示的角色名称。
     display_name: 示例战士
+    # level_rule：引用 levels.yml 中的等级规则 ID。
     level_rule: 默认
+    # upgrade_conditions：只放这个职业额外需要的升级条件。
     upgrade_conditions: []
+    # base：角色在起始等级的六项基础属性。
     base:
       力量: 10
       耐力: 12
@@ -14,6 +18,7 @@ roles:
       精神: 4
       智力: 2
       专注: 3
+    # growth：以 <lvl> 为变量的成长公式；这里只填写一级属性。
     growth:
       力量: "10 + 0.6 * Math.pow(<lvl>, 1.6)"
       耐力: "12 + 0.8 * Math.pow(<lvl>, 1.5)"
