@@ -1,0 +1,89 @@
+# 这是开发阶段的稳定回归测试清单。
+# expected 允许先写公式或范围，避免过早绑定最终平衡数值。
+test_suite: empyrean:template
+fixtures:
+  actor: empyrean:player
+  level: 20
+  class: empyrean:warrior
+  target: empyrean:training_dummy
+  equipment:
+    - id: empyrean:iron_sword_01
+      upgrade_level: 3
+      roll_seed: 12345
+      affixes: [empyrean:keen, empyrean:ember]
+  artifacts: [empyrean:ember_flower, empyrean:ember_circlet]
+  echoes: [empyrean:ember_wolf_echo, empyrean:ash_sprite_echo]
+  buffs: [empyrean:war_cry]
+
+cases:
+  - id: config_utf8_and_aliases
+    type: config_load
+    input:
+      attribute_alias: 物理攻击力
+      formula: "属性('力量') + 10"
+    expect:
+      canonical_ids: [empyrean:strength]
+      encoding: UTF-8
+      no_ambiguous_alias: true
+
+  - id: level_formula_segments
+    type: progression
+    input:
+      track: empyrean:player_level
+      level: 20
+      previous_required: 1000
+    expect:
+      selected_segment: "level <= 30"
+      finite: true
+
+  - id: source_domain_snapshot
+    type: attribute_snapshot
+    expect:
+      has_sources:
+        - empyrean:level_growth
+        - empyrean:base_class
+        - empyrean:equipment
+        - empyrean:artifact
+        - empyrean:echo
+        - empyrean:buff
+      has_trace: true
+
+  - id: echo_cost_limit
+    type: loadout_validation
+    input:
+      level: 20
+      echo_costs: [4, 3]
+    expect:
+      valid: true
+      total_cost: 7
+
+  - id: fire_critical_proc
+    type: combat
+    input:
+      skill: empyrean:light_slash
+      attack_tags: [melee, fire]
+      rng_seed: 20261018
+    expect:
+      proc_group: critical
+      one_roll_scope: hit
+      damage_call_count: 1
+      uses_vanilla_hurt: true
+
+  - id: reload_frozen_item
+    type: reload
+    input:
+      item: empyrean:ember_flower
+      policy: frozen
+    expect:
+      mutate_existing_item: false
+      invalidate_snapshot_cache: true
+
+  - id: ui_preview_is_read_only
+    type: ui_api
+    input:
+      endpoint: ysa.attribute.preview
+      changes: {add_artifact: empyrean:ember_circlet}
+    expect:
+      preview_only: true
+      inventory_changed: false
+      response_has: [schema_version, snapshot_version]

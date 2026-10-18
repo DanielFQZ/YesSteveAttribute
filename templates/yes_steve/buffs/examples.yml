@@ -1,0 +1,18 @@
+# 临时来源示例。Buff 的属性贡献必须带生命周期和来源实例 ID。
+buffs:
+  - id: empyrean:war_cry
+    name: 战吼
+    duration_ticks: 200
+    max_stacks: 1
+    stacking: refresh_duration
+    source_domain: empyrean:buff
+    contributions:
+      - attribute: empyrean:strength
+        value: 20
+      - attribute: empyrean:crit_chance
+        value: 0.05
+    events:
+      on_apply:
+        - emit: empyrean:buff_applied
+      on_expire:
+        - emit: empyrean:buff_expired

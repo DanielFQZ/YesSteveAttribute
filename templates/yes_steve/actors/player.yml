@@ -1,0 +1,26 @@
+# 玩家职业与基础来源示例。
+actors:
+  - id: empyrean:player
+    type: player
+    progression: empyrean:player_level
+    class: empyrean:warrior
+    default_loadouts:
+      equipment: empyrean:starter_equipment
+      accessory: []
+      artifact: []
+      echo: []
+
+classes:
+  - id: empyrean:warrior
+    name: 无畏佣兵
+    aliases: [战士, 佣兵]
+    source_domain: empyrean:base_class
+    contributions:
+      - attribute: empyrean:max_health
+        formula: "120 + level * 3"
+      - attribute: empyrean:strength
+        formula: "18 + level * 0.8"
+      - attribute: empyrean:armor
+        formula: "10 + level * 1.1"
+      - attribute: empyrean:crit_chance
+        value: 0.05

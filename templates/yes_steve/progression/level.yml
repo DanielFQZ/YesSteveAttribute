@@ -1,0 +1,55 @@
+# 等级是 ProgressionState，不是普通属性来源。
+# 其他公式通过 ctx.progression('empyrean:player_level') 读取等级。
+id: empyrean:player_level
+type: progression_track
+name: 玩家等级
+aliases: [等级, 玩家等级]
+
+state:
+  start_level: 1
+  max_level: 100
+  experience: 0
+  level: 1
+
+experience:
+  # previous_required 是上一级升级所需经验；level 是当前等级。
+  next_required:
+    segments:
+      - when: "level <= 10"
+        formula: "500 + level * 120"
+      - when: "level <= 30"
+        formula: "1000 * pow(level, 1.35)"
+      - when: "level > 30"
+        formula: "previous_required * 1.25"
+  overflow_policy: retain
+
+ascension:
+  # 每十级需要一次升阶；具体任务由项目自己的任务系统提供。
+  - id: empyrean:ascension_1
+    when: "level >= 10 && level % 10 == 0"
+    require:
+      - quest:empyrean:ascension_1
+    block_level_up: true
+    consume_on_complete: false
+  - id: empyrean:ascension_2
+    when: "level >= 30 && level % 10 == 0"
+    require:
+      - quest:empyrean:ascension_2
+    block_level_up: true
+
+# 等级成长会生成可追踪的 empyrean:level_growth 来源。
+growth:
+  source_id: empyrean:level_growth
+  contributions:
+    - attribute: empyrean:max_health
+      formula: "100 + pow(level, 1.2) * 12"
+    - attribute: empyrean:strength
+      formula: "8 + level * 1.5"
+    - attribute: empyrean:armor
+      formula: "level * 0.8"
+
+unlock:
+  - when: "level >= 10"
+    grant_source: empyrean:advanced_relic_slots
+  - when: "level >= 20"
+    grant_source: empyrean:echo_resonance_2

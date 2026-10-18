@@ -1,0 +1,39 @@
+# Yes Steve Attribute 配置模板总入口。
+format_version: 1
+schema_version: 1
+namespace: empyrean
+locale: zh_cn
+
+# 只接受 UTF-8，加载器不得依赖 Windows 系统默认代码页。
+encoding: UTF-8
+
+formula:
+  # simple 是默认的声明式公式；js 需要通过受限引擎执行。
+  default_engine: simple
+  allow_restricted_js: true
+  max_execution_millis: 5
+  reject_nan_and_infinity: true
+
+reload:
+  # reload 失败时继续使用上一份有效配置。
+  keep_last_valid: true
+  # 只让快照和公式缓存失效，不偷偷改写玩家背包中的 frozen 实例。
+  invalidate_runtime_cache: true
+  mutate_existing_items: false
+
+files:
+  - progression/level.yml
+  - attributes/definitions.yml
+  - sources/domains.yml
+  - actors/player.yml
+  - actors/monster.yml
+  - items/equipment.yml
+  - items/artifact.yml
+  - items/echo.yml
+  - buffs/examples.yml
+  - combat/elements.yml
+  - combat/damage_profiles.yml
+  - combat/procs.yml
+  - skills/light_slash.yml
+  - yss/light_slash.hit.jsonc
+  - ui/api.yml

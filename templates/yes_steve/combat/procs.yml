@@ -1,0 +1,29 @@
+# 通用概率事件。普通暴击和元素暴击都使用同一套 Proc 管线。
+procs:
+  - id: empyrean:physical_critical
+    name: 普通暴击
+    group: critical
+    roll_scope: hit
+    when: "attack.contains('physical')"
+    chance: "clamp(ctx.attr('empyrean:crit_chance') - ctx.target.attr('empyrean:crit_resistance'), 0, 1)"
+    effects:
+      - mark: critical
+      - multiply_damage: "ctx.attr('empyrean:crit_multiplier')"
+      - emit: empyrean:critical_hit
+
+  - id: empyrean:fire_critical
+    name: 火焰暴击
+    group: critical
+    roll_scope: hit
+    when: "attack.contains('fire')"
+    chance: "clamp(ctx.attr('empyrean:fire_crit_chance') - ctx.target.attr('empyrean:fire_crit_resist'), 0, 1)"
+    effects:
+      - mark: critical
+      - multiply_damage: "ctx.attr('empyrean:fire_crit_multiplier')"
+      - emit: empyrean:fire_critical
+
+groups:
+  - id: critical
+    # 同一个 group 默认只允许一个成功的 Proc。
+    exclusive: true
+    rng: attack_rng

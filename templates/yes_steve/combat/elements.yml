@@ -1,0 +1,17 @@
+# 元素只是伤害标签和抗性规则，不直接替代原版伤害入口。
+elements:
+  - id: empyrean:physical
+    name: 物理
+    resistance: empyrean:physical_resistance
+  - id: empyrean:fire
+    name: 火焰
+    resistance: empyrean:fire_resistance
+
+reactions:
+  - id: empyrean:burning
+    name: 燃烧
+    requires: [empyrean:fire]
+    effect:
+      type: damage_over_time
+      damage_profile: empyrean:burning_tick
+      duration_ticks: 100
