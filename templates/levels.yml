@@ -1,26 +1,25 @@
-# 等级配置模板
-# 这里负责等级、经验和通用升级条件；角色文件只引用“等级规则”。
+# Level and experience rules
+# Structure keys are English; conditions and formulas use the short variables <lvl> and <prev>.
 
-等级规则:
+level_rules:
   默认:
-    起始等级: 1
-    最大等级: 100
-    初始经验: 0
-    升级经验:
-      # <lvl> 当前等级；<prev> 上一级升级所需经验。
-      分段:
-        - 条件: "<lvl> <= 10"
-          公式: "500 + 120 * <lvl>"
-        - 条件: "<lvl> <= 30"
-          公式: "1000 * Math.pow(<lvl>, 1.35)"
-        - 条件: "<lvl> > 30"
-          公式: "<prev> * 1.25"
-    升级条件:
-      - 条件: "<lvl> < 10"
-        要求: []
-      - 条件: "<lvl> >= 10 && <lvl> % 10 == 0"
-        要求:
-          - 类型: 任务
-            值: 升阶任务_1
-        未满足时: 阻止升级
-    溢出经验: 保留
+    start: 1
+    max: 100
+    initial_exp: 0
+    experience:
+      segments:
+        - when: "<lvl> <= 10"
+          formula: "500 + 120 * <lvl>"
+        - when: "<lvl> <= 30"
+          formula: "1000 * Math.pow(<lvl>, 1.35)"
+        - when: "<lvl> > 30"
+          formula: "<prev> * 1.25"
+    promotion:
+      - when: "<lvl> < 10"
+        requirements: []
+      - when: "<lvl> >= 10 && <lvl> % 10 == 0"
+        requirements:
+          - type: quest
+            value: 升阶任务_1
+        on_fail: block
+    overflow_exp: keep

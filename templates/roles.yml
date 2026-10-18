@@ -1,22 +1,20 @@
-# 角色与职业基础数值模板
-# 这里只配置一级属性。生命上限、法力上限、伤害、暴击等次级属性统一由 formulas.yml 计算。
-# 一个文件可以放多个职业；也可以复制本文件拆成多个同结构文件。
+# Role and class base values
+# Structure keys are English; role IDs, display names and attribute IDs may be Chinese.
+# Only primary attributes are listed here. Derived values come from formulas.yml.
 
-角色:
+roles:
   示例战士:
-    名称: 示例战士
-    等级规则: 默认
-    升级条件: []
-    # 这里可以放职业额外的解锁条件；经验曲线和通用等级条件在 levels.yml。
-    基础属性:
+    display_name: 示例战士
+    level_rule: 默认
+    upgrade_conditions: []
+    base:
       力量: 10
       耐力: 12
       敏捷: 6
       精神: 4
       智力: 2
       专注: 3
-    随等级变化:
-      # <lvl> 是当前角色等级。这里不要填写次级属性公式。
+    growth:
       力量: "10 + 0.6 * Math.pow(<lvl>, 1.6)"
       耐力: "12 + 0.8 * Math.pow(<lvl>, 1.5)"
       敏捷: "6 + 0.3 * <lvl>"
@@ -25,17 +23,17 @@
       专注: "3 + 0.15 * <lvl>"
 
   示例法师:
-    名称: 示例法师
-    等级规则: 默认
-    升级条件: []
-    基础属性:
+    display_name: 示例法师
+    level_rule: 默认
+    upgrade_conditions: []
+    base:
       力量: 2
       耐力: 6
       敏捷: 5
       精神: 8
       智力: 12
       专注: 10
-    随等级变化:
+    growth:
       力量: "2 + 0.1 * <lvl>"
       耐力: "6 + 0.4 * Math.pow(<lvl>, 1.4)"
       敏捷: "5 + 0.25 * <lvl>"
