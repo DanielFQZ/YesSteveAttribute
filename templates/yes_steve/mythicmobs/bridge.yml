@@ -34,6 +34,13 @@ mechanics:
     mode_parameter: mode
     allowed_modes: [add_exp, set_level, add_level]
 
+  # 只提供经过权限检查的属性来源或临时修正，不允许技能直接写最终属性快照。
+  ysa-attribute:
+    attribute_parameter: attribute
+    value_parameter: value
+    mode_parameter: mode
+    allowed_modes: [add_source, remove_source, preview]
+
 skill_examples:
   # MythicMobs 仍然使用原有的 Conditions、Targeters、repeat 和 delay。
   轻斩:
