@@ -8,9 +8,10 @@ locale: zh_cn
 encoding: UTF-8
 
 formula:
-  # simple 是默认的声明式公式；js 需要通过受限引擎执行。
-  default_engine: simple
-  allow_restricted_js: true
+  # 所有数值公式都直接写在所属 YAML 的 formula/chance/when 字段中。
+  # 语法兼容旧配置的 Math.pow、Math.min、Math.max 和 <lvl> 占位符。
+  default_engine: inline_expression
+  placeholder_style: angle_brackets
   max_execution_millis: 5
   reject_nan_and_infinity: true
 
@@ -36,4 +37,5 @@ files:
   - combat/procs.yml
   - skills/light_slash.yml
   - yss/light_slash.hit.jsonc
+  - mythicmobs/bridge.yml
   - ui/api.yml

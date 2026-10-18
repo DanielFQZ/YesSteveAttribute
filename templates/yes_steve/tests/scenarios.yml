@@ -20,7 +20,7 @@ cases:
     type: config_load
     input:
       attribute_alias: 物理攻击力
-      formula: "属性('力量') + 10"
+      formula: "<力量> + 10"
     expect:
       canonical_ids: [empyrean:strength]
       encoding: UTF-8

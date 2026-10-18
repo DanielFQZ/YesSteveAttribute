@@ -5,10 +5,10 @@ procs:
     group: critical
     roll_scope: hit
     when: "attack.contains('physical')"
-    chance: "clamp(ctx.attr('empyrean:crit_chance') - ctx.target.attr('empyrean:crit_resistance'), 0, 1)"
+    chance: "clamp(<暴击率> - <目标.暴击抵抗>, 0, 1)"
     effects:
       - mark: critical
-      - multiply_damage: "ctx.attr('empyrean:crit_multiplier')"
+      - multiply_damage: "<暴击倍率>"
       - emit: empyrean:critical_hit
 
   - id: empyrean:fire_critical
@@ -16,10 +16,10 @@ procs:
     group: critical
     roll_scope: hit
     when: "attack.contains('fire')"
-    chance: "clamp(ctx.attr('empyrean:fire_crit_chance') - ctx.target.attr('empyrean:fire_crit_resist'), 0, 1)"
+    chance: "clamp(<火焰暴击率> - <目标.火焰暴击抵抗>, 0, 1)"
     effects:
       - mark: critical
-      - multiply_damage: "ctx.attr('empyrean:fire_crit_multiplier')"
+      - multiply_damage: "<火焰暴击倍率>"
       - emit: empyrean:fire_critical
 
 groups:

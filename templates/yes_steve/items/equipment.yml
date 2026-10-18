@@ -11,11 +11,11 @@ items:
       locked: [item_id]
     contributions:
       - attribute: empyrean:weapon_power
-        formula: "18 + upgrade_level * 4"
+        formula: "18 + <强化等级> * 4"
     strengthen:
       max_level: 10
-      cost_formula: "1000 + upgrade_level * 500"
-      chance_formula: "max(0.2, 1 - upgrade_level * 0.05)"
+      cost_formula: "1000 + <强化等级> * 500"
+      chance_formula: "Math.max(0.2, 1 - <强化等级> * 0.05)"
 
 affixes:
   - id: empyrean:keen

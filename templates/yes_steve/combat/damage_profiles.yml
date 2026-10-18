@@ -5,7 +5,7 @@ profiles:
     tags: [melee, weapon_attack]
     components:
       - type: physical
-        amount: "ctx.attr('empyrean:attack_power') * 1.20"
+        amount: "<攻击强度> * 1.20"
     processors:
       - empyrean:physical_resistance
       - empyrean:critical_group
@@ -18,7 +18,7 @@ profiles:
     tags: [dot, fire]
     components:
       - type: fire
-        amount: "ctx.attr('empyrean:attack_power') * 0.25"
+        amount: "<攻击强度> * 0.25"
     processors:
       - empyrean:fire_resistance
     vanilla:

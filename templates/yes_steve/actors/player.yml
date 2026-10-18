@@ -17,10 +17,10 @@ classes:
     source_domain: empyrean:base_class
     contributions:
       - attribute: empyrean:max_health
-        formula: "120 + level * 3"
+        formula: "120 + <lvl> * 3"
       - attribute: empyrean:strength
-        formula: "18 + level * 0.8"
+        formula: "18 + <lvl> * 0.8"
       - attribute: empyrean:armor
-        formula: "10 + level * 1.1"
+        formula: "10 + <lvl> * 1.1"
       - attribute: empyrean:crit_chance
         value: 0.05

@@ -2,7 +2,7 @@
 echo_system:
   domain: empyrean:echo
   slots: 5
-  cost_limit_formula: "10 + floor(ctx.progression('empyrean:player_level') / 20)"
+  cost_limit_formula: "10 + Math.floor(<lvl> / 20)"
   instance_policy: frozen
   identity_fields: [item_id, roll_seed, cost, skill_id, sonata_id, tuning_level]
   locked_fields: [item_id, roll_seed]

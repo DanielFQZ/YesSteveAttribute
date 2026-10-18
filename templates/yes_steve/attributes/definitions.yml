@@ -21,7 +21,7 @@ attributes:
     unit: flat
     default: 1
     aggregation: derived
-    formula: "ctx.attr('empyrean:strength') + ctx.attr('empyrean:weapon_power')"
+    formula: "<力量> + <武器强度>"
 
   - id: empyrean:weapon_power
     name: 武器强度
