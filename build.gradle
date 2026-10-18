@@ -1,0 +1,47 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.neoforged.moddev.legacyforge' version '2.0.91' apply false
+}
+
+group = mod_group_id
+version = mod_version
+
+subprojects {
+    group = rootProject.mod_group_id
+    version = rootProject.mod_version
+
+    repositories {
+        mavenLocal {
+            content {
+                includeModule 'com.elfmcys.ysm', 'ysm'
+            }
+        }
+        mavenCentral()
+    }
+
+    plugins.withId('java') {
+        java {
+            toolchain.languageVersion = JavaLanguageVersion.of(17)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+    }
+}
+
+project(':core') {
+    apply plugin: 'java-library'
+
+    dependencies {
+        api "org.yaml:snakeyaml:${rootProject.snakeyaml_version}"
+    }
+
+    jar {
+        manifest {
+            attributes('Specification-Title': 'YesSteveAttribute Core',
+                    'Implementation-Version': project.version)
+        }
+    }
+}

@@ -1,0 +1,100 @@
+plugins {
+    id 'eclipse'
+    id 'idea'
+    id 'net.neoforged.moddev.legacyforge'
+}
+
+base {
+    archivesName = mod_id
+}
+
+legacyForge {
+    version = "${minecraft_version}-${forge_version}"
+
+    runs {
+        client {
+            client()
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+        }
+        server {
+            server()
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+            programArgument '--nogui'
+        }
+        configureEach {
+            gameDirectory = project.file('run')
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+            jvmArguments = ['-Xmx4G', '-Xms1G', '-XX:+IgnoreUnrecognizedVMOptions']
+        }
+    }
+
+    mods {
+        yessteveattribute {
+            sourceSet sourceSets.main
+        }
+    }
+}
+
+repositories {
+    mavenLocal {
+        content {
+            includeModule 'com.elfmcys.ysm', 'ysm'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':core')
+    // Forge 发行版依赖 YSM；客户端类通过 Dist.CLIENT 隔离，专用服务器不解析这些类。
+    modImplementation "com.elfmcys.ysm:ysm:${ysm_version}"
+    annotationProcessor "com.elfmcys.ysm:ysm:${ysm_version}"
+}
+
+tasks.named('processResources', ProcessResources).configure {
+    var replaceProperties = [minecraft_version: minecraft_version,
+                             minecraft_version_range: minecraft_version_range,
+                             forge_version: forge_version,
+                             forge_version_range: forge_version_range,
+                             loader_version_range: loader_version_range,
+                             mod_id: mod_id,
+                             mod_name: mod_name,
+                             mod_license: mod_license,
+                             mod_version: mod_version,
+                             mod_authors: mod_authors,
+                             mod_description: mod_description,
+                             ysm_version: ysm_version]
+    inputs.properties replaceProperties
+    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+        expand replaceProperties + [project: project]
+    }
+}
+
+// 将独立 core 的类和 SnakeYAML 一并放入 Forge jar，便于整合包只安装一个 YSA 文件。
+tasks.named('jar', Jar).configure {
+    dependsOn project(':core').tasks.named('classes')
+    from(project(':core').sourceSets.main.output)
+    from({ configurations.runtimeClasspath
+            .findAll { it.name.startsWith('snakeyaml-') }
+            .collect { zipTree(it) } })
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(['Specification-Title': mod_id,
+                    'Specification-Vendor': mod_authors,
+                    'Specification-Version': '1',
+                    'Implementation-Title': project.name,
+                    'Implementation-Version': project.version,
+                    'Implementation-Vendor': mod_authors,
+                    'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")])
+    }
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+tasks.withType(JavaCompile).configureEach {
+    // YSM 兼容性处理器用于发现 Molang 绑定实际调用的 YSM API。
+    options.compilerArgs.addAll([
+            '-Aysm.compat.ownedPackages=com.yessteveattribute',
+            '-Aysm.compat.moduleId=yessteveattribute'
+    ])
+}

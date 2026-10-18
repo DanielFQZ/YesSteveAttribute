@@ -1,0 +1,460 @@
+# 属性定义模板
+# 文件编码为 UTF-8。配置结构键使用英文，属性 ID 可以直接使用中文。
+# primary、combat、element_weight、element_resistance、derived、runtime 只是阅读分组，不是程序限制。
+# 程序内部所有属性都使用同一种变量接口；装备、Buff、角色或其他 Mod 都可以修改任意属性。
+#
+# 每个属性条目的字段含义：
+# type：属性类型，供校验和 UI 使用，不决定属性能否被修改。
+# unit：显示单位，例如点、倍率、权重。
+# default：没有任何来源时使用的默认值。
+# visible：是否建议在面板中显示，false 不代表属性不可读取。
+# 属性来源不写在这里，运行时调试日志会自动记录来源。
+
+attributes:
+  # 面板上直接展示的基础属性。它们和其他属性在程序内部没有权限差异。
+  primary:
+    # 力量：用于计算基础伤害。
+    力量:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 耐力：用于计算生命上限。
+    耐力:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 敏捷：当前测试只保留为可扩展属性，不绑定移动或攻击间隔。
+    敏捷:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 精神：用于计算生命恢复速度。
+    精神:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 智力：用于计算法力上限。
+    智力:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 专注：用于计算法力恢复速度。
+    专注:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+
+  # 直接参与战斗计算的属性。
+  combat:
+    # 武器伤害：加入基础伤害公式的装备或技能数值。
+    武器伤害:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 护甲：用于计算目标的护甲减伤。
+    护甲:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 暴击：攻击方的暴击评分。
+    暴击:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 暴击抗性：目标抵抗暴击的评分。
+    暴击抗性:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    # 暴击倍率：发生暴击后，乘在暴击前最终伤害上的倍率。
+    暴击倍率:
+      type: multiplier
+      unit: 倍率
+      default: 1.5
+      visible: true
+
+  # 元素权重用于把基础伤害分配到不同元素。
+  element_weight:
+    炽炎:
+      type: number
+      unit: 权重
+      default: 0
+      visible: false
+    冰霜:
+      type: number
+      unit: 权重
+      default: 0
+      visible: false
+    狂风:
+      type: number
+      unit: 权重
+      default: 0
+      visible: false
+    雷暴:
+      type: number
+      unit: 权重
+      default: 0
+      visible: false
+    圣光:
+      type: number
+      unit: 权重
+      default: 0
+      visible: false
+    暗影:
+      type: number
+      unit: 权重
+      default: 0
+      visible: false
+
+  # 元素抗性用于扣除对应元素伤害。
+  element_resistance:
+    炽炎抗性:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+    冰霜抗性:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+    狂风抗性:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+    雷暴抗性:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+    圣光抗性:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+    暗影抗性:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+
+  # 由 formulas.yml 计算的属性。它们也可以被装备、Buff 或其他 Mod 直接修改。
+  derived:
+    基础伤害:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+    无属性伤害权重:
+      type: number
+      unit: 权重
+      default: 30
+      visible: false
+    总伤害权重:
+      type: number
+      unit: 权重
+      default: 30
+      visible: false
+    无属性伤害:
+      type: number
+      unit: 点
+      default: 0
+      visible: false
+    生命上限:
+      type: number
+      unit: 点
+      default: 0
+      visible: true
+    生命恢复速度:
+      type: number
+      unit: 点/秒
+      default: 0
+      visible: true
+    # 法力和精力、集中使用同一套资源接口；保留法力用于测试通用资源能力。
+    法力上限:
+      type: resource_max
+      unit: 点
+      default: 0
+      visible: true
+    法力恢复速度:
+      type: resource_rate
+      unit: 点/秒
+      default: 0
+      visible: true
+    精力上限:
+      type: resource_max
+      unit: 点
+      default: 500
+      visible: true
+    精力恢复速度:
+      type: resource_rate
+      unit: 点/秒
+      default: 40
+      visible: true
+    充能上限:
+      type: resource_max
+      unit: 点
+      default: 100
+      visible: true
+    充能衰减速度:
+      type: resource_rate
+      unit: 点/秒
+      default: 0
+      visible: true
+    集中上限:
+      type: resource_max
+      unit: 点
+      default: 100
+      visible: true
+    集中恢复速度:
+      type: resource_rate
+      unit: 点/秒
+      default: 10
+      visible: true
+    # 以下是可叠加的伤害和减伤倍率，默认值 1 表示不改变结果。
+    基础伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    无属性伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    炽炎伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    冰霜伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    狂风伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    雷暴伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    圣光伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    暗影伤害加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    护甲减伤加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    炽炎减伤加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    冰霜减伤加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    狂风减伤加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    雷暴减伤加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    圣光减伤加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    暗影减伤加成:
+      type: multiplier
+      unit: 倍率
+      default: 1
+      visible: false
+    # 元素亲和是根据元素权重得到的枚举结果。
+    元素亲和:
+      type: enum
+      unit: 元素
+      default: 无
+      visible: false
+
+  # 只在资源运行或一次战斗中产生的临时值。
+  runtime:
+    # 当前资源值由资源接口读写；initial 规则见 resources。
+    法力值:
+      type: resource_current
+      unit: 点
+      default: 0
+      visible: true
+    精力值:
+      type: resource_current
+      unit: 点
+      default: 500
+      visible: true
+    充能值:
+      type: resource_current
+      unit: 点
+      default: 0
+      visible: true
+    集中值:
+      type: resource_current
+      unit: 点
+      default: 100
+      visible: true
+    # 以下字段是战斗公式的中间结果，不建议展示给普通玩家。
+    炽炎伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    冰霜伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    狂风伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    雷暴伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    圣光伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    暗影伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    炽炎减伤:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    冰霜减伤:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    狂风减伤:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    雷暴减伤:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    圣光减伤:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    暗影减伤:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    暴击概率:
+      type: combat_value
+      unit: 概率
+      default: 0
+      visible: false
+    暴击前伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    暴击伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    元素伤害总和:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    元素减伤总和:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    护甲减伤:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    最终伤害:
+      type: combat_value
+      unit: 点
+      default: 0
+      visible: false
+    # 本次是否暴击由战斗事件写入，公式只读取它。
+    本次是否暴击:
+      type: combat_input
+      unit: 布尔值
+      default: 0
+      visible: false
+
+# 资源绑定：定义当前值、上限、恢复/衰减属性之间的关系。
+# 这些资源都通过同一套资源接口读取和修改。
+resources:
+  # 法力：保留为通用资源示例，默认初始满值。
+  法力:
+    current: 法力值
+    maximum: 法力上限
+    recovery: 法力恢复速度
+    initial: maximum
+  # 精力：默认上限 500，恢复 40 点/秒，初始满值。
+  精力:
+    current: 精力值
+    maximum: 精力上限
+    recovery: 精力恢复速度
+    initial: maximum
+  # 充能：默认上限 100，初始为 0，衰减速度由配置决定。
+  充能:
+    current: 充能值
+    maximum: 充能上限
+    decay: 充能衰减速度
+    initial: 0
+  # 集中：默认上限 100，初始满值，恢复 10 点/秒。
+  集中:
+    current: 集中值
+    maximum: 集中上限
+    recovery: 集中恢复速度
+    initial: maximum

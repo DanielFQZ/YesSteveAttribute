@@ -1,0 +1,13 @@
+.gradle/
+build/
+*/build/
+run/
+*/run/
+out/
+*.iml
+.idea/
+.vscode/
+
+# Forge/Gradle generated sources and local logs
+forge/src/generated/
+*.log

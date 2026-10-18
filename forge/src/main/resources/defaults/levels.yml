@@ -1,0 +1,32 @@
+# 等级与经验规则模板
+# 配置结构键使用英文，条件和公式使用短变量 <lvl>、<prev>。
+
+level_rules:
+  默认:
+    # start：角色的起始等级。
+    start: 1
+    # max：角色允许达到的最高等级。
+    max: 100
+    # initial_exp：角色创建时的经验值。
+    initial_exp: 0
+    # experience：每个等级需要的经验，可以按条件分段。
+    experience:
+      segments:
+        # when：当前等级满足时使用这一段公式。
+        - when: "<lvl> <= 10"
+          formula: "500 + 120 * <lvl>"
+        - when: "<lvl> <= 30"
+          formula: "1000 * Math.pow(<lvl>, 1.35)"
+        - when: "<lvl> > 30"
+          formula: "<prev> * 1.25"
+    # promotion：升阶或额外升级条件；不满足时可以阻止升级。
+    promotion:
+      - when: "<lvl> < 10"
+        requirements: []
+      - when: "<lvl> >= 10 && <lvl> % 10 == 0"
+        requirements:
+          - type: quest
+            value: 升阶任务_1
+        on_fail: block
+    # overflow_exp：达到等级上限后的多余经验处理方式。
+    overflow_exp: keep
