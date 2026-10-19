@@ -1,7 +1,5 @@
 package com.yessteveattribute.forge.client;
 
-import com.elfmcys.ysm.api.annotation.Side;
-import com.elfmcys.ysm.api.annotation.YsmExtension;
 import com.elfmcys.ysm.geckolib3.core.molang.binding.ContextBinding;
 import com.elfmcys.ysm.molang.runtime.ExecutionContext;
 import com.elfmcys.ysm.molang.runtime.Function;
@@ -20,7 +18,6 @@ import org.jetbrains.annotations.Nullable;
  * <p>当前版本先完成语法和注册链路。属性快照与服务端伤害桥接完成后，
  * 两个函数会复用同一套核心计算接口。</p>
  */
-@YsmExtension(side = Side.CLIENT)
 public final class YsaMolangBinding extends ContextBinding {
     public YsaMolangBinding() {
         function("attr", new AttributeFunction());

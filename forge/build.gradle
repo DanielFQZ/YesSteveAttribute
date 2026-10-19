@@ -48,7 +48,6 @@ dependencies {
     implementation project(':core')
     // Forge 发行版依赖 YSM；客户端类通过 Dist.CLIENT 隔离，专用服务器不解析这些类。
     modImplementation "com.elfmcys.ysm:ysm:${ysm_version}"
-    annotationProcessor "com.elfmcys.ysm:ysm:${ysm_version}"
 }
 
 tasks.named('processResources', ProcessResources).configure {
@@ -92,9 +91,6 @@ tasks.named('jar', Jar).configure {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 tasks.withType(JavaCompile).configureEach {
-    // YSM 兼容性处理器用于发现 Molang 绑定实际调用的 YSM API。
-    options.compilerArgs.addAll([
-            '-Aysm.compat.ownedPackages=com.yessteveattribute',
-            '-Aysm.compat.moduleId=yessteveattribute'
-    ])
+    // YSA 通过 FMLClientSetup 直接注册绑定，不使用 YSM 的兼容性注解处理器。
+    // 这样不会在成品 jar 生成与 YSS 相同的 fingerprint 包。
 }
