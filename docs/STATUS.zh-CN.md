@@ -1,6 +1,6 @@
 # 当前开发状态（会话入口）
 
-最后更新：2026-10-25，Paper 1.20.1 插件命令补全与 EmpyreanUI 业务适配模式的临时调试页面完成。
+最后更新：2026-10-26，YSA 代码、README 和开发者 Wiki 已提交并推送。
 
 ## 当前决策与边界
 
@@ -26,7 +26,7 @@
 - YSS 当前源码不再读取 `damage_mode: "ysa_multiplier"`、`resource_costs`，没有 YSA 支付授权或动作序号协议。历史验收对应的是已撤回的本地 YSS 扩展。
 - YSA 中 `ysa.damage`、`CombatDamageType` 等仍有上一轮未完成草稿；当前 Molang 反射调用的 `YssAttackService.queueMolangDamage` 已不存在，不能视为可用伤害入口。
 - YSA 的可选 `-PyssIntegrationJar=...` GameTest 仍假设撤回前的 YSS 接口。**不要使用当前 PR3 jar 运行旧联动验收并期待通过，也不要重新扩大 YSS 来迎合旧测试。**后续应先收敛自己的测试边界。
-- YSA 工作区仍有大量未提交成果和草稿；`main` 为 `859a58c`，领先 `origin/main` 9 个提交。不能直接把整个工作区当作已验收发布版本上传。
+- 本轮 YSA 代码已整理为提交 `76695d4` 并推送到 `origin/main`；README 和双语开发者 Wiki 位于仓库根目录和 `wiki/`。
 
 ## 源码验证与部署差异
 
@@ -41,7 +41,7 @@ YSS 本轮在 Java 17 下执行 `gradlew.bat clean build --offline --console=pla
 - 目标服已于 2026-10-25 14:10 启动并监听 25566；YSA、YSS、MineBrowse、MythicMobs 均完成启用，启动日志未发现 YSA/YSS 异常。
 - 已在目标服插件目录备份旧同名文件（备份目录为 D:\MCserver\苍穹彼岸高版本开发端\deployment-backups\20261025-140941），并安装 yessteveattribute-paper-0.1.0.jar、yessteveskill-paper-0.1.0.jar。
 - 当前尚未做真实玩家连接、/ysa 命令和 MythicMobs 技能运行验收；首启后如需让已有 MythicMobs 技能识别新机制，应执行一次 /mm reload。
-- 本轮未推送 GitHub，也未修改客户端配置。不要把 /ysa reload 当成更新 jar 的方式。
+- 本轮已推送 GitHub；没有修改客户端配置。不要把 `/ysa reload` 当成更新 jar 的方式。
 
 ## 当前 Paper 适配进度
 
@@ -55,7 +55,7 @@ YSS 本轮在 Java 17 下执行 `gradlew.bat clean build --offline --console=pla
 1. 在隔离测试服安装两个 Paper jar，验证插件启用、`/ysa reload` 成功/失败回滚和 MythicMobs 机制注册。
 2. 补齐 Paper 玩家存档、在线重算和目标属性映射，再做 MythicMobs 实际伤害/条件测试。
 3. 用户前台启动目标服后，验证 `/ysa` 补全、`/ysa debug` 页面及服务端配置/快照显示；UI 不进入 YSA core，也不修改客户端 YSS。
-4. 整理拟上传的具体提交和内容，再执行用户授权的 GitHub 发布工作。
+4. 继续完善 Paper 玩家存档、在线重算和真实 MythicMobs 技能验收。
 5. 用户联系原作者后，再按双方约定提供最小接入点；YSS 审计问题可供沟通，不自行开始全面重构。
 
 ## 文档导航
