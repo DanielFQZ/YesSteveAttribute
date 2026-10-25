@@ -1,0 +1,5 @@
+const $=id=>document.getElementById(id);
+async function call(name){return mcui.server.call(name);}
+function card(key,value,extra=''){const el=document.createElement('div');el.className='card';el.innerHTML=`<b>${key}</b><span>${value}</span><small>${extra}</small>`;return el;}
+async function load(){ $('error').textContent=''; try { const [c,s]=await Promise.all([call('ysa.debug.config'),call('ysa.debug.snapshot')]); $('meta').textContent=`玩家：${s.player}　配置：${s.reload}　服务端权威数据`; $('config').replaceChildren(...Object.entries(c.attributes).map(([id,d])=>card(id,d.default,`${d.type} · ${d.unit} · ${d.group}${d.visible?'':' · 隐藏字段'}`))); $('values').replaceChildren(...Object.entries(s.values).map(([id,v])=>card(id,typeof v==='number'?Number(v.toFixed(4)):v))); $('resources').replaceChildren(...Object.entries(s.resources).map(([id,r])=>card(id,`${r.current} / ${r.maximum}`,`恢复 ${r.recovery}/s · 衰减 ${r.decay}/s`))); } catch(e){ $('error').textContent='读取失败：'+(e.message||e); }}
+$('refresh').addEventListener('click',load); load();

@@ -1,0 +1,5 @@
+{
+  "death.attack.yessteveattribute.calculated": "%1$s was defeated by %2$s",
+  "death.attack.yessteveattribute.calculated.player": "%1$s fell while fighting %2$s",
+  "death.attack.yessteveattribute.calculated.item": "%1$s was defeated by %2$s using %3$s"
+}

@@ -1,0 +1,4 @@
+package com.yessteveattribute.paper;
+import com.yessteveattribute.core.runtime.*; import org.bukkit.entity.*; import java.util.Map;
+/** Stable public service boundary for YSS, MythicMobs and other Paper plugins. */
+public final class PaperAttributeService { private final YesSteveAttributePaper plugin; PaperAttributeService(YesSteveAttributePaper plugin){this.plugin=plugin;} public AttributeSnapshot snapshot(Player player){return plugin.profile(player).snapshot();} public Map<String,ResourceState> resources(Player player){return plugin.profile(player).resources();} public ResourceConsumption.Result tryConsume(Player player,Map<String,Double> costs){return plugin.profile(player).consume(costs);} public CombatCalculator.Result calculate(Player attacker,LivingEntity target,double multiplier,double roll,CombatDamageType type){return plugin.profile(attacker).calculateAttack(target,multiplier,roll,type);} }

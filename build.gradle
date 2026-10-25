@@ -45,3 +45,30 @@ project(':core') {
         }
     }
 }
+
+project(':paper') {
+    apply plugin: 'java-library'
+    base { archivesName = 'yessteveattribute-paper' }
+    dependencies {
+        api project(':core')
+        compileOnly files('C:/Users/38683/.gradle/caches/modules-2/files-2.1/io.papermc.paper/paper-api/1.20.1-R0.1-SNAPSHOT/71680be2f2e80f25e20ae4b49ebd84539d306a44/paper-api-1.20.1-R0.1-SNAPSHOT.jar', 'C:/Users/38683/.gradle/caches/modules-2/files-2.1/net.kyori/adventure-api/4.14.0/e8f089092c77caaa0b0fce9ee7c309200437f9e1/adventure-api-4.14.0.jar', 'C:/Users/38683/.gradle/caches/modules-2/files-2.1/net.md-5/bungeecord-chat/1.20-R0.1-deprecated+build.14/d9c3b08d76aad08ac1c4231f34ae6cffe678ebfb/bungeecord-chat-1.20-R0.1-deprecated+build.14.jar', 'D:/MCserver/苍穹彼岸高版本开发端/plugins/minebrowse-paper-1.20.1-1.0.0.jar', 'C:/Users/38683/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10/dd9b193aef96e973d5a11ab13cd17430c2e4306b/gson-2.10.jar')
+    }
+    tasks.withType(JavaCompile).configureEach { options.release = 17 }
+    tasks.named('jar', Jar).configure {
+        dependsOn project(':core').tasks.named('classes')
+        from(project(':core').sourceSets.main.output)
+        from({ configurations.runtimeClasspath.findAll { it.name.startsWith('snakeyaml-') }.collect { zipTree(it) } })
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+}
+
+project(':paper-yss') {
+    apply plugin: 'java-library'
+    base { archivesName = 'yessteveskill-paper' }
+    dependencies {
+        compileOnly project(':paper')
+        compileOnly files('C:/Users/38683/.gradle/caches/modules-2/files-2.1/io.papermc.paper/paper-api/1.20.1-R0.1-SNAPSHOT/71680be2f2e80f25e20ae4b49ebd84539d306a44/paper-api-1.20.1-R0.1-SNAPSHOT.jar', 'C:/Users/38683/.gradle/caches/modules-2/files-2.1/net.kyori/adventure-api/4.14.0/e8f089092c77caaa0b0fce9ee7c309200437f9e1/adventure-api-4.14.0.jar', 'C:/Users/38683/.gradle/caches/modules-2/files-2.1/net.md-5/bungeecord-chat/1.20-R0.1-deprecated+build.14/d9c3b08d76aad08ac1c4231f34ae6cffe678ebfb/bungeecord-chat-1.20-R0.1-deprecated+build.14.jar')
+        compileOnly files('D:/MCserver/苍穹彼岸高版本开发端/plugins/MythicMobs-5.7.2.jar')
+    }
+    tasks.withType(JavaCompile).configureEach { options.release = 17 }
+}

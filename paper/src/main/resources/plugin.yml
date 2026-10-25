@@ -1,0 +1,20 @@
+name: YesSteveAttribute
+version: '0.1.0'
+main: com.yessteveattribute.paper.YesSteveAttributePaper
+api-version: '1.20'
+description: Configurable attributes and combat API for Paper 1.20.1
+softdepend: [MythicMobs, MineBrowse, EmpyreanUI, PlaceholderAPI]
+commands:
+  ysa:
+    description: YesSteveAttribute administration and diagnostics
+    usage: /ysa <reload|status|attr|resource|role|level|profile|debug>
+    permission: ysa.use
+permissions:
+  ysa.use:
+    default: true
+    description: Use YSA diagnostics and personal queries
+  ysa.admin:
+    default: op
+  ysa.debug:
+    default: op
+    description: Open the YSA server-authoritative debug UI

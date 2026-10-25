@@ -35,4 +35,39 @@ class FormulaEngineTest {
         assertThrows(FormulaException.class, () -> engine.evaluate("甲", EvaluationContext.builder().build()));
         assertThrows(FormulaException.class, () -> engine.evaluateExpression("1 / 0", EvaluationContext.builder().build()));
     }
+
+    @Test
+    void reportsFunctionArityAsFormulaError() {
+        FormulaEngine engine = new FormulaEngine(new FormulasConfiguration(Map.of(), Map.of()));
+        assertThrows(FormulaException.class,
+                () -> engine.evaluateExpression("Math.pow(1)", EvaluationContext.builder().build()));
+        assertThrows(FormulaException.class,
+                () -> engine.evaluateExpression("Math.min()", EvaluationContext.builder().build()));
+    }
+
+    @Test
+    void validatesTemplateTextFunctionSyntax() {
+        FormulaEngine.validateExpressionSyntax("最高权重元素(<力量>, <敏捷>)");
+    }
+
+    @Test
+    void consumesBothSidesOfLogicalOperators() {
+        FormulaEngine engine = new FormulaEngine(new FormulasConfiguration(Map.of(), Map.of()));
+        assertEquals(0.0, engine.evaluateExpression("1 >= 10 && 1 % 10 == 0", EvaluationContext.builder().build()));
+        assertEquals(1.0, engine.evaluateExpression("1 >= 10 || 1 % 10 == 1", EvaluationContext.builder().build()));
+    }
+
+    @Test void shortCircuitsUnusedBranchesAndVariablesButStillChecksSyntax() {
+        var engine = new FormulaEngine(new FormulasConfiguration(Map.of(), Map.of()));
+        var empty = EvaluationContext.of(Map.of());
+        assertEquals(7, engine.evaluateExpression("0 ? 1 / 0 : 7", empty));
+        assertEquals(7, engine.evaluateExpression("1 ? 7 : <缺失>", empty));
+        assertEquals(0, engine.evaluateExpression("0 && (1 % 0)", empty));
+        assertEquals(1, engine.evaluateExpression("1 || <缺失>", empty));
+        assertEquals(9, engine.evaluateExpression("1 ? (0 ? <缺失> : 9) : 1 / 0", empty));
+        assertThrows(FormulaException.class, () -> engine.evaluateExpression("1 ? 1 / 0 : 7", empty));
+        assertThrows(FormulaException.class, () -> engine.evaluateExpression("0 || <缺失>", empty));
+        assertThrows(FormulaException.class, () -> engine.evaluateExpression("1 ? 7 : Math.pow(1)", empty));
+        assertThrows(FormulaException.class, () -> FormulaEngine.validateExpressionSyntax("1 ? 7 : bad"));
+    }
 }

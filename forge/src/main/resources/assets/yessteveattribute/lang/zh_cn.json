@@ -1,0 +1,5 @@
+{
+  "death.attack.yessteveattribute.calculated": "%1$s 被 %2$s 击败了",
+  "death.attack.yessteveattribute.calculated.player": "%1$s 在与 %2$s 战斗时倒下了",
+  "death.attack.yessteveattribute.calculated.item": "%1$s 被 %2$s 用 %3$s 击败了"
+}

@@ -92,6 +92,18 @@ class YamlConfigLoaderTest {
                 .anyMatch(item -> item.contains("不存在")));
     }
 
+    @Test
+    void reportsInvalidFormulaSyntaxDuringLoad() throws IOException {
+        write("attributes.yml", "attributes:\n  primary:\n    力量: {type: number, unit: 点, default: 0, visible: true}\n");
+        write("formulas.yml", "damage:\n  结果: \"<力量> +\"\n");
+        write("roles.yml", "roles: {}\n");
+        write("levels.yml", "level_rules: {}\n");
+        ConfigurationException exception = assertThrows(ConfigurationException.class,
+                () -> new YamlConfigLoader().load(temp));
+        assertEquals(true, exception.getDiagnostics().stream()
+                .anyMatch(item -> item.contains("公式语法错误")));
+    }
+
     private void write(String name, String content) throws IOException {
         Files.writeString(temp.resolve(name), content, StandardCharsets.UTF_8);
     }

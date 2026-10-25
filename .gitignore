@@ -11,3 +11,4 @@ out/
 # Forge/Gradle generated sources and local logs
 forge/src/generated/
 *.log
+forge/logs/

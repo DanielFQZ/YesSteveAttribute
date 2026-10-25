@@ -8,6 +8,15 @@ base {
     archivesName = mod_id
 }
 
+sourceSets {
+    gameTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+configurations.gameTestImplementation.extendsFrom(configurations.implementation)
+configurations.gameTestRuntimeOnly.extendsFrom(configurations.runtimeOnly)
+
 legacyForge {
     version = "${minecraft_version}-${forge_version}"
 
@@ -21,6 +30,11 @@ legacyForge {
             systemProperty 'forge.enabledGameTestNamespaces', mod_id
             programArgument '--nogui'
         }
+        gameTestServer {
+            type = 'gameTestServer'
+            sourceSet = sourceSets.gameTest
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+        }
         configureEach {
             gameDirectory = project.file('run')
             systemProperty 'forge.logging.markers', 'REGISTRIES'
@@ -32,6 +46,47 @@ legacyForge {
     mods {
         yessteveattribute {
             sourceSet sourceSets.main
+            sourceSet project(':core').sourceSets.main
+            sourceSet sourceSets.gameTest
+        }
+    }
+}
+
+legacyForge.addModdingDependenciesTo(sourceSets.gameTest)
+legacyForge.runs.gameTestServer.gameDirectory = layout.buildDirectory.dir('gametest-run')
+def prepareGameTestStructures = tasks.register('prepareGameTestStructures', Copy) {
+    from('src/gameTest/structures')
+    into(layout.buildDirectory.dir('gametest-run/gameteststructures'))
+}
+legacyForge.runs.gameTestServer.taskBefore(prepareGameTestStructures)
+
+// Explicit opt-in to test the external YSS release jar; no production dependency or bundling.
+if (providers.gradleProperty('yssIntegrationJar').isPresent()) {
+    def integrationJar = file(providers.gradleProperty('yssIntegrationJar').get())
+    if (!integrationJar.isFile() || integrationJar.name != 'yessteveskill-1.0.jar')
+        throw new GradleException('yssIntegrationJar must point to the built yessteveskill-1.0.jar')
+    repositories.flatDir {
+        dirs integrationJar.parentFile
+        content { includeGroup 'ysa.integration' }
+    }
+    dependencies.add('modRuntimeOnly', 'ysa.integration:yessteveskill:1.0')
+    legacyForge.runs.gameTestServer.systemProperty 'ysa.testYss', 'true'
+}
+
+// Forge Main can return exit code 0 after a startup error. Require an actual GameTest completion.
+tasks.named('runGameTestServer').configure {
+    def resultLog = layout.buildDirectory.file('gametest-run/logs/latest.log')
+    doFirst {
+        resultLog.get().asFile.parentFile.mkdirs()
+        resultLog.get().asFile.setText('', 'UTF-8')
+    }
+    doLast {
+        def logText = resultLog.get().asFile.getText('UTF-8')
+        if (!logText.contains('9 GAME TESTS COMPLETE') || !logText.contains('All 9 required tests passed :)')) {
+            throw new GradleException('Expected all 9 combat/resource/skill GameTests to pass; inspect ' + resultLog.get().asFile)
+        }
+        if (providers.gradleProperty('yssIntegrationJar').isPresent() && (!logText.contains('YSS integration checks passed') || !logText.contains('YSS skill cost checks passed'))) {
+            throw new GradleException('YSS integration checks did not complete; inspect ' + resultLog.get().asFile)
         }
     }
 }
@@ -48,6 +103,28 @@ dependencies {
     implementation project(':core')
     // Forge 发行版依赖 YSM；客户端类通过 Dist.CLIENT 隔离，专用服务器不解析这些类。
     modImplementation "com.elfmcys.ysm:ysm:${ysm_version}"
+    // Production embeds SnakeYAML below; development launches need it on the legacy library classpath.
+    legacyForge.runs.each { run ->
+        add(run.additionalRuntimeClasspathConfiguration.name, "org.yaml:snakeyaml:${snakeyaml_version}")
+    }
+    // YSM's server model loader uses LWJGL memory buffers; server runs do not extract client natives.
+    def hostOs = System.getProperty('os.name').toLowerCase(Locale.ROOT)
+    def hostArch = System.getProperty('os.arch').toLowerCase(Locale.ROOT)
+    def nativeOs = hostOs.contains('win') ? 'windows' : (hostOs.contains('mac') ? 'macos' : 'linux')
+    def nativeArch = hostArch in ['aarch64', 'arm64'] ? '-arm64' : (hostArch in ['x86', 'i386'] ? '-x86' : '')
+    add(legacyForge.runs.gameTestServer.additionalRuntimeClasspathConfiguration.name,
+            "org.lwjgl:lwjgl:3.3.1:natives-${nativeOs}${nativeArch}")
+    testImplementation platform('org.junit:junit-bom:5.14.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') { useJUnitPlatform() }
+
+// LegacyForge wires Minecraft onto main only. Reader tests use the same mapped classes.
+sourceSets.test {
+    compileClasspath += sourceSets.main.compileClasspath
+    runtimeClasspath += sourceSets.main.runtimeClasspath
 }
 
 tasks.named('processResources', ProcessResources).configure {

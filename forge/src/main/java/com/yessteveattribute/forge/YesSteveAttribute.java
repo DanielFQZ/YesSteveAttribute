@@ -22,17 +22,36 @@ public final class YesSteveAttribute {
     public YesSteveAttribute() {
         LOGGER.info("Yes Steve Attribute Forge 模块已加载（{}）", MOD_ID);
         ConfigService.reload();
+        AttributeNetwork.register();
         MinecraftForge.EVENT_BUS.addListener(YesSteveAttribute::registerCommands);
     }
 
     private static void registerCommands(RegisterCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("ysa")
+        var root = Commands.literal("ysa")
                 .requires(source -> source.hasPermission(2))
                 .then(Commands.literal("reload").executes(context -> {
-                    boolean loaded = ConfigService.reload();
-                    context.getSource().sendSuccess(() -> Component.literal(
-                            loaded ? "YSA 配置已重新加载" : "YSA 配置加载失败，请查看日志"), true);
-                    return loaded ? 1 : 0;
-                })));
+                    ConfigService.ReloadReport report = ConfigService.reloadDetailed();
+                    if (report.success()) {
+                        PlayerAttributes.syncAll();
+                        context.getSource().sendSuccess(() -> Component.literal(
+                                "YSA 配置重载成功：" + report.directory()
+                                        + "；属性 " + report.attributes()
+                                        + "，资源 " + report.resources()
+                                        + "，公式 " + report.formulas()
+                                        + "，角色 " + report.roles()
+                                        + "，等级规则 " + report.levels()
+                                        + "；耗时 " + report.elapsedMillis() + " ms"), true);
+                    } else {
+                        context.getSource().sendFailure(Component.literal(
+                                "YSA 配置重载失败，已保留上一次有效配置（耗时 "
+                                        + report.elapsedMillis() + " ms）"));
+                        for (String diagnostic : report.diagnostics()) {
+                            context.getSource().sendFailure(Component.literal("原因：" + diagnostic));
+                        }
+                    }
+                    return report.success() ? 1 : 0;
+                }));
+        AttributeCommands.register(root);
+        event.getDispatcher().register(root);
     }
 }

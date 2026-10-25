@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  * syntax as the YAML files, for example {@code <基础伤害>}.
  */
 public final class FormulaEngine {
-    private static final Pattern PLACEHOLDER = Pattern.compile("<([^>]+)>");
+    private static final Pattern PLACEHOLDER = Pattern.compile("<([^<>]+)>");
     private final Map<String, FormulaDefinition> formulas;
 
     public FormulaEngine(FormulasConfiguration configuration) {
@@ -33,6 +33,20 @@ public final class FormulaEngine {
 
     public double evaluateExpression(String expression, EvaluationContext context) {
         return evaluateExpression(expression, context, new HashSet<>());
+    }
+
+    /** Validates expression syntax without resolving configured variables. */
+    public static void validateExpressionSyntax(String expression) {
+        if (expression == null || expression.isBlank()) {
+            throw new FormulaException("公式不能为空");
+        }
+        Matcher matcher = PLACEHOLDER.matcher(expression);
+        StringBuffer rewritten = new StringBuffer();
+        while (matcher.find()) {
+            matcher.appendReplacement(rewritten, "1");
+        }
+        matcher.appendTail(rewritten);
+        new Parser(rewritten.toString(), ignored -> null, true).parse();
     }
 
     private double evaluate(String formulaId, EvaluationContext context, Set<String> stack) {
@@ -51,25 +65,30 @@ public final class FormulaEngine {
     }
 
     private double evaluateExpression(String expression, EvaluationContext context, Set<String> stack) {
-        Map<String, Double> bindings = new HashMap<>();
+        return evaluateExpression(expression, name -> {
+            Double value = context.get(name);
+            if (value == null && formulas.containsKey(name)) return evaluate(name, context, stack);
+            return value;
+        });
+    }
+
+    /** Resolve variables only in evaluated branches, including recursive formula dependencies. */
+    public double evaluateExpression(String expression, Function<String, Double> resolver) {
+        Map<String, String> bindings = new HashMap<>();
         Matcher matcher = PLACEHOLDER.matcher(expression);
         StringBuffer rewritten = new StringBuffer();
         int index = 0;
         while (matcher.find()) {
             String name = matcher.group(1).trim();
             String token = "__v" + index++;
-            Double value = context.get(name);
-            if (value == null && formulas.containsKey(name)) {
-                value = evaluate(name, context, stack);
-            }
-            if (value == null) {
-                throw new FormulaException("公式引用了未知变量: <" + name + ">");
-            }
-            bindings.put(token, value);
+            bindings.put(token, name);
             matcher.appendReplacement(rewritten, token);
         }
         matcher.appendTail(rewritten);
-        double result = new Parser(rewritten.toString(), bindings).parse();
+        double result = new Parser(rewritten.toString(), token -> {
+            String name = bindings.get(token);
+            return name == null ? null : resolver.apply(name);
+        }, false).parse();
         if (!Double.isFinite(result)) {
             throw new FormulaException("公式结果不是有限数字: " + expression);
         }
@@ -78,12 +97,16 @@ public final class FormulaEngine {
 
     private static final class Parser {
         private final String source;
-        private final Map<String, Double> variables;
+        private final Function<String, Double> variables;
+        private final boolean syntaxOnly;
+        private boolean evaluating;
         private int position;
 
-        private Parser(String source, Map<String, Double> variables) {
+        private Parser(String source, Function<String, Double> variables, boolean syntaxOnly) {
             this.source = source;
             this.variables = variables;
+            this.syntaxOnly = syntaxOnly;
+            this.evaluating = !syntaxOnly;
         }
 
         double parse() {
@@ -99,9 +122,13 @@ public final class FormulaEngine {
             double condition = or();
             skipWhitespace();
             if (take('?')) {
+                boolean parent = evaluating;
+                evaluating = parent && condition != 0;
                 double whenTrue = conditional();
                 expect(':');
+                evaluating = parent && condition == 0;
                 double whenFalse = conditional();
+                evaluating = parent;
                 return condition != 0.0 ? whenTrue : whenFalse;
             }
             return condition;
@@ -109,13 +136,25 @@ public final class FormulaEngine {
 
         private double or() {
             double value = and();
-            while (take("||")) value = (value != 0 || and() != 0) ? 1 : 0;
+            while (take("||")) {
+                boolean parent = evaluating;
+                evaluating = parent && value == 0;
+                double right = and();
+                evaluating = parent;
+                value = (value != 0 || right != 0) ? 1 : 0;
+            }
             return value;
         }
 
         private double and() {
             double value = equality();
-            while (take("&&")) value = (value != 0 && equality() != 0) ? 1 : 0;
+            while (take("&&")) {
+                boolean parent = evaluating;
+                evaluating = parent && value != 0;
+                double right = equality();
+                evaluating = parent;
+                value = (value != 0 && right != 0) ? 1 : 0;
+            }
             return value;
         }
 
@@ -154,11 +193,11 @@ public final class FormulaEngine {
                 if (take('*')) value *= unary();
                 else if (take('/')) {
                     double divisor = unary();
-                    if (divisor == 0) throw error("除数不能为零");
+                    if (divisor == 0 && evaluating) throw error("除数不能为零");
                     value /= divisor;
                 } else if (take('%')) {
                     double divisor = unary();
-                    if (divisor == 0) throw error("取模除数不能为零");
+                    if (divisor == 0 && evaluating) throw error("取模除数不能为零");
                     value %= divisor;
                 } else return value;
             }
@@ -193,31 +232,56 @@ public final class FormulaEngine {
                 }
                 return function(identifier, args);
             }
-            Double value = variables.get(identifier);
+            if (!evaluating && !syntaxOnly) return 0;
+            Double value = variables.apply(identifier);
             if (value == null) throw error("未知变量: " + identifier);
+            if (!Double.isFinite(value)) throw error("变量不是有限数值: " + identifier);
             return value;
         }
 
         private double function(String name, List<Double> args) {
             return switch (name) {
-                case "Math.pow", "pow" -> require(name, args, 2, Math.pow(args.get(0), args.get(1)));
-                case "Math.min", "min" -> requireAtLeast(name, args, args.stream().mapToDouble(Double::doubleValue).min().orElseThrow());
-                case "Math.max", "max" -> requireAtLeast(name, args, args.stream().mapToDouble(Double::doubleValue).max().orElseThrow());
-                case "Math.floor", "floor" -> require(name, args, 1, Math.floor(args.get(0)));
-                case "Math.ceil", "ceil" -> require(name, args, 1, Math.ceil(args.get(0)));
-                case "Math.abs", "abs" -> require(name, args, 1, Math.abs(args.get(0)));
+                case "Math.pow", "pow" -> {
+                    requireCount(name, args, 2);
+                    yield Math.pow(args.get(0), args.get(1));
+                }
+                case "Math.min", "min" -> {
+                    requireAtLeast(name, args, 1);
+                    yield args.stream().mapToDouble(Double::doubleValue).min().orElseThrow();
+                }
+                case "Math.max", "max" -> {
+                    requireAtLeast(name, args, 1);
+                    yield args.stream().mapToDouble(Double::doubleValue).max().orElseThrow();
+                }
+                case "Math.floor", "floor" -> {
+                    requireCount(name, args, 1);
+                    yield Math.floor(args.get(0));
+                }
+                case "Math.ceil", "ceil" -> {
+                    requireCount(name, args, 1);
+                    yield Math.ceil(args.get(0));
+                }
+                case "Math.abs", "abs" -> {
+                    requireCount(name, args, 1);
+                    yield Math.abs(args.get(0));
+                }
+                case "最高权重元素" -> {
+                    requireAtLeast(name, args, 1);
+                    if (evaluating) {
+                        throw error("文本函数 最高权重元素 不能作为数值公式求值");
+                    }
+                    yield 0;
+                }
                 default -> throw error("不支持的函数: " + name);
             };
         }
 
-        private double require(String name, List<Double> args, int count, double value) {
+        private void requireCount(String name, List<Double> args, int count) {
             if (args.size() != count) throw error(name + " 参数数量必须是 " + count);
-            return value;
         }
 
-        private double requireAtLeast(String name, List<Double> args, double value) {
-            if (args.isEmpty()) throw error(name + " 至少需要一个参数");
-            return value;
+        private void requireAtLeast(String name, List<Double> args, int count) {
+            if (args.size() < count) throw error(name + " 至少需要 " + count + " 个参数");
         }
 
         private double number() {

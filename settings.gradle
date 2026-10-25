@@ -7,4 +7,4 @@ pluginManagement {
 }
 
 rootProject.name = 'YesSteveAttribute'
-include 'core', 'forge'
+include 'core', 'forge', 'paper', 'paper-yss'

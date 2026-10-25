@@ -1,6 +1,7 @@
 package com.yessteveattribute.forge;
 
 import com.yessteveattribute.core.config.AttributeDefinition;
+import com.yessteveattribute.core.config.ConfigurationException;
 import com.yessteveattribute.core.config.LoadedConfiguration;
 import com.yessteveattribute.core.config.YamlConfigLoader;
 import com.yessteveattribute.core.formula.FormulaEngine;
@@ -10,8 +11,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /** Owns the active immutable configuration snapshot on the Forge side. */
@@ -29,22 +30,44 @@ public final class ConfigService {
     }
 
     public static synchronized boolean reload(Path configDirectory) {
+        return reloadDetailed(configDirectory).success();
+    }
+
+    /** Loads a new snapshot and returns a user-facing report for the reload command. */
+    public static synchronized ReloadReport reloadDetailed(Path configDirectory) {
+        long started = System.nanoTime();
         try {
             ensureDefaults(configDirectory);
             LoadedConfiguration loaded = new YamlConfigLoader().load(configDirectory);
+            var preparedPlayers = PlayerAttributes.prepareReload(loaded);
             // Only publish after all four files and all cross-file checks pass.
             STATE.set(new State(loaded, new FormulaEngine(loaded.getFormulas())));
+            PlayerAttributes.publish(preparedPlayers);
             directory = configDirectory;
             YesSteveAttribute.LOGGER.info("已加载 YSA 配置：{} 个属性、{} 个公式、{} 个角色、{} 条等级规则",
                     loaded.getAttributes().getAttributes().size(),
                     loaded.getFormulas().getFormulas().size(),
                     loaded.getRoles().getRoles().size(),
                     loaded.getLevels().getRules().size());
-            return true;
+            return ReloadReport.success(configDirectory, loaded, elapsedMillis(started));
+        } catch (ConfigurationException exception) {
+            YesSteveAttribute.LOGGER.error("YSA 配置加载失败；保留上一次有效配置（目录：{}）", configDirectory, exception);
+            return ReloadReport.failure(configDirectory, exception.getDiagnostics(), elapsedMillis(started));
         } catch (IOException | RuntimeException exception) {
             YesSteveAttribute.LOGGER.error("YSA 配置加载失败；保留上一次有效配置（目录：{}）", configDirectory, exception);
-            return false;
+            String message = exception.getMessage();
+            return ReloadReport.failure(configDirectory,
+                    List.of(message == null || message.isBlank() ? exception.getClass().getSimpleName() : message),
+                    elapsedMillis(started));
         }
+    }
+
+    public static synchronized ReloadReport reloadDetailed() {
+        return reloadDetailed(FMLPaths.CONFIGDIR.get().resolve(CONFIG_DIRECTORY));
+    }
+
+    private static long elapsedMillis(long started) {
+        return Math.max(0L, (System.nanoTime() - started) / 1_000_000L);
     }
 
     private static void ensureDefaults(Path configDirectory) throws IOException {
@@ -55,7 +78,7 @@ public final class ConfigService {
             String resource = "/defaults/" + file;
             try (InputStream input = ConfigService.class.getResourceAsStream(resource)) {
                 if (input == null) throw new IOException("缺少内置模板资源: " + resource);
-                Files.copy(input, target, StandardCopyOption.COPY_ATTRIBUTES);
+                Files.copy(input, target);
             }
         }
     }
@@ -89,5 +112,28 @@ public final class ConfigService {
     }
 
     private record State(LoadedConfiguration configuration, FormulaEngine formulas) {
+    }
+
+    /** Immutable result of one reload attempt, suitable for chat and command logging. */
+    public record ReloadReport(boolean success, Path directory, int attributes, int resources,
+                               int formulas, int roles, int levels, long elapsedMillis,
+                               List<String> diagnostics) {
+        public ReloadReport {
+            diagnostics = List.copyOf(diagnostics == null ? List.of() : diagnostics);
+        }
+
+        private static ReloadReport success(Path directory, LoadedConfiguration loaded, long elapsedMillis) {
+            return new ReloadReport(true, directory,
+                    loaded.getAttributes().getAttributes().size(),
+                    loaded.getAttributes().getResources().size(),
+                    loaded.getFormulas().getFormulas().size(),
+                    loaded.getRoles().getRoles().size(),
+                    loaded.getLevels().getRules().size(),
+                    elapsedMillis, List.of());
+        }
+
+        private static ReloadReport failure(Path directory, List<String> diagnostics, long elapsedMillis) {
+            return new ReloadReport(false, directory, 0, 0, 0, 0, 0, elapsedMillis, diagnostics);
+        }
     }
 }

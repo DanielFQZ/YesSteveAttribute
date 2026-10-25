@@ -1,0 +1,8 @@
+name: YesSteveSkill
+version: '0.1.0'
+main: com.yessteveskill.paper.YesSteveSkillPaper
+api-version: '1.20'
+depend:
+  - YesSteveAttribute
+  - MythicMobs
+description: MythicMobs 5.7.2 bridge for YesSteveAttribute

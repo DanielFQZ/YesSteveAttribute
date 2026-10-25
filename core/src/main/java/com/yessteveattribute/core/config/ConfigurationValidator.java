@@ -1,5 +1,8 @@
 package com.yessteveattribute.core.config;
 
+import com.yessteveattribute.core.formula.FormulaEngine;
+import com.yessteveattribute.core.formula.FormulaException;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +31,21 @@ public final class ConfigurationValidator {
                                         LevelsConfiguration levels) {
         List<String> errors = new ArrayList<>();
         Set<String> attributeIds = attributes.getAttributes().keySet();
+        Set<String> currentIds = new HashSet<>();
+        Set<String> parameterIds = new HashSet<>();
+        for (ResourceDefinition resource : attributes.getResources().values()) {
+            if (!currentIds.add(resource.getCurrent())) errors.add("资源 current 绑定重复: " + resource.getCurrent());
+            if (formulas.get(resource.getCurrent()) != null) errors.add("资源 current 不能同时定义公式: " + resource.getCurrent());
+            parameterIds.add(resource.getMaximum());
+            if (resource.getRecovery() != null) parameterIds.add(resource.getRecovery());
+            if (resource.getDecay() != null) parameterIds.add(resource.getDecay());
+            Object initial = resource.getInitial();
+            if (!(initial instanceof String) && !(initial instanceof Number))
+                errors.add("资源 initial 必须是数值、maximum 或属性 ID: " + resource.getId());
+            if (initial instanceof Number n && !Double.isFinite(n.doubleValue()))
+                errors.add("资源 initial 必须是有限数字: " + resource.getId());
+        }
+        for (String id : currentIds) if (parameterIds.contains(id)) errors.add("资源 current 不能同时作为上限或速率: " + id);
 
         for (ResourceDefinition resource : attributes.getResources().values()) {
             checkAttributeReference(resource.getCurrent(), "resource " + resource.getId() + ".current",
@@ -127,6 +145,11 @@ public final class ConfigurationValidator {
             if (!attributes.contains(token) && !formulas.getFormulas().containsKey(token)) {
                 errors.add("引用了未定义变量: " + location + " -> <" + token + ">");
             }
+        }
+        try {
+            FormulaEngine.validateExpressionSyntax(expression);
+        } catch (FormulaException exception) {
+            errors.add("公式语法错误: " + location + " -> " + exception.getMessage());
         }
     }
 }
